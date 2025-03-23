@@ -24,14 +24,14 @@ class Predictor:
 
     def recognize(self, image: np.ndarray) -> Tuple[PersonAndFaceResult, Optional[np.ndarray]]:
         detected_objects: PersonAndFaceResult = self.detector.predict(image)
-        self.age_gender_model.predict(image, detected_objects)
+        age, gender = self.age_gender_model.predict(image, detected_objects)
 
         out_im = None
         if self.draw:
             # plot results on image
             out_im = detected_objects.plot()
 
-        return detected_objects, out_im
+        return detected_objects, out_im, age, gender
 
     def recognize_video(self, source: str) -> Generator:
         video_capture = cv2.VideoCapture(source)

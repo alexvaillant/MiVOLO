@@ -170,7 +170,7 @@ class MiVOLO:
         output = self.inference(model_input)
 
         # write gender and age results into detected_bboxes
-        self.fill_in_results(output, detected_bboxes, faces_inds, bodies_inds)
+        return self.fill_in_results(output, detected_bboxes, faces_inds, bodies_inds)
 
     def fill_in_results(self, output, detected_bboxes, faces_inds, bodies_inds):
         if self.meta.only_age:
@@ -206,6 +206,8 @@ class MiVOLO:
 
                 detected_bboxes.set_gender(face_ind, gender, gender_score)
                 detected_bboxes.set_gender(body_ind, gender, gender_score)
+
+            return age, gender
 
     def prepare_crops(self, image: np.ndarray, detected_bboxes: PersonAndFaceResult):
 
