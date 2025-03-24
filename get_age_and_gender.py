@@ -1,34 +1,31 @@
-# Global variables
-IMG_P = "person_13_body.png"
+import sys
 
-# all package-imports
-import cv2
-import torch
-from mivolo.predictor import Predictor
+import specified_helper_functions as helper
+import prediction_handling
 
-class Config:
-    detector_weights = "models/yolov8x_person_face.pt"
-    device = "cuda:0"
-    checkpoint = "models/mivolo_imbd.pth.tar"
-    with_persons = True
-    disable_faces = True
-    draw = False
+# Configure logging
+import logging
+logging.basicConfig(filename='app.log', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
+def age_and_gender_classification(anon_type):
+    # Set up 
+    sist_basis = helper.get_anon_type_sist_basis(anon_type)
+    all_unedited_cities = helper.collect_all_footage_dfs(anon_type)
+    predictor = prediction_handling.set_up_predictor()
 
-def main():
-    args = Config()
-    if torch.cuda.is_available():
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.backends.cudnn.benchmark = True
+    age_data, gender_data = prediction_handling.predict_all_cities(all_unedited_cities, predictor)
 
-    predictor = Predictor(args, verbose=True)
+    new_column_data_dict = {
+        "age": age_data,
+        "gender": gender_data
+    }
 
-    # load image and get final prediction
-    img = cv2.imread(IMG_P)
-    detected_objects, out_im, age, gender = predictor.recognize(img)
-
-    print(f"We detected a person of age {age} and gender {gender}")
+    helper.update_sist_df(sist_basis, new_column_data_dict, anon_type)
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1:
+        age_and_gender_classification(sys.argv[1])
+    else:
+        logging.warning(f"Age and Gender Classifier weren't able to be executed due to missing anon_type argument!")
